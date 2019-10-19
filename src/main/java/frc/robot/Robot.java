@@ -51,9 +51,14 @@ public class Robot extends TimedRobot {
   private TalonSRX rightMaster = new TalonSRX(1);
   private VictorSPX leftSlave = new VictorSPX(1);
   private VictorSPX rightSlave = new VictorSPX(2);
-  private TalonSRX rollerMotor = new TalonSRX(4);
+
   private TalonSRX armMotor = new TalonSRX(5);
   private VictorSPX armSlave = new VictorSPX(3);
+
+  private TalonSRX leftRollerMotor = new TalonSRX(4);
+  private TalonSRX rightRollerMotor = new TalonSRX(5);
+  private TalonSRX topRollerMotor = new TalonSRX(7);
+
   private Compressor compressor = new Compressor();
   private DoubleSolenoid piston = new DoubleSolenoid(0, 1);
   private DoubleSolenoid frontClimb = new DoubleSolenoid(2, 3);
@@ -212,13 +217,13 @@ public class Robot extends TimedRobot {
       armMotor.set(ControlMode.Position, 0);
       break;
     case PID2:
-      armMotor.set(ControlMode.Position, 0);
+      armMotor.set(ControlMode.Position, 30);
       break;
     case PID3:
-      armMotor.set(ControlMode.Position, 0);
+      armMotor.set(ControlMode.Position, 100);
       break;
     case PID4:
-      armMotor.set(ControlMode.Position, 0);
+      armMotor.set(ControlMode.Position, 140);
       break;
     case Manual:
       armMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(1));
@@ -264,17 +269,37 @@ public class Robot extends TimedRobot {
     double power = 1;
     switch (rollerState) {
     case Stop:
-      rollerMotor.set(ControlMode.PercentOutput, 0);
+      leftRollerMotor.set(ControlMode.PercentOutput, 0);
+      rightRollerMotor.set(ControlMode.PercentOutput, 0);
+      topRollerMotor.set(ControlMode.PercentOutput, 0);
       break;
     case Manual:
-      rollerMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(4));
+      leftRollerMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(4));
+      rightRollerMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(4));
+      topRollerMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(4));
       break;
     case In:
-      power *= -1;
+      if (pistonState == PistonState.Ball) {
+        power = -1;
+        leftRollerMotor.set(ControlMode.PercentOutput, power);
+        rightRollerMotor.set(ControlMode.PercentOutput, power);
+        topRollerMotor.set(ControlMode.PercentOutput, power);
+      } else {
+        power = 1;
+        leftRollerMotor.set(ControlMode.PercentOutput, power);
+        rightRollerMotor.set(ControlMode.PercentOutput, power);
+      }
     case Out:
-      if (pistonState == PistonState.Ball)
-        power *= -1;
-      rollerMotor.set(ControlMode.PercentOutput, power);
+      if (pistonState == PistonState.Ball) {
+        power = -1;
+        leftRollerMotor.set(ControlMode.PercentOutput, power);
+        rightRollerMotor.set(ControlMode.PercentOutput, power);
+        topRollerMotor.set(ControlMode.PercentOutput, power);
+      } else {
+        power = 1;
+        leftRollerMotor.set(ControlMode.PercentOutput, power);
+        rightRollerMotor.set(ControlMode.PercentOutput, power);
+      }
       break;
     default:
     }
@@ -350,5 +375,10 @@ public class Robot extends TimedRobot {
     armMotor.setNeutralMode(mode);
     armSlave.setNeutralMode(mode);
     rollerMotor.setNeutralMode(mode);
+  }
+
+  @Override
+  public void testPeriodic() {
+
   }
 }
