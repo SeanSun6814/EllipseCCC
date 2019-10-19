@@ -246,17 +246,17 @@ public class Robot extends TimedRobot {
       armMotor.set(ControlMode.Position, 0 / kArmTick2Deg);
       break;
     case PID2:
-      armMotor.set(ControlMode.Position, 10 / kArmTick2Deg);
+      armMotor.set(ControlMode.Position, 35 / kArmTick2Deg);
       break;
     case PID3:
-      armMotor.set(ControlMode.Position, 100 / kArmTick2Deg);
+      armMotor.set(ControlMode.Position, 70 / kArmTick2Deg);
       break;
     case PID4:
-      armMotor.set(ControlMode.Position, 140 / kArmTick2Deg);
+      armMotor.set(ControlMode.Position, 50 / kArmTick2Deg);
       break;
     case Manual:
       armMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(3) * 0.3);
-      try2ResetArmEncoder();
+      // try2ResetArmEncoder();
       break;
     case Stop:
       armMotor.set(ControlMode.PercentOutput, 0);
@@ -399,6 +399,11 @@ public class Robot extends TimedRobot {
     SmartDashboard.putString("Piston State:", pistonState.toString());
     SmartDashboard.putString("Rollers State:", rollerState.toString());
     SmartDashboard.putBoolean("Arm IsReset", armIsReset);
+
+    SmartDashboard.putNumber("Top Roller Amp", topRollerMotor.getOutputCurrent());
+    SmartDashboard.putNumber("Left Roller Amp", leftRollerMotor.getOutputCurrent());
+    SmartDashboard.putNumber("Right Roller Amp", rightRollerMotor.getOutputCurrent());
+
   }
 
   public void activateMotors(boolean on) {
