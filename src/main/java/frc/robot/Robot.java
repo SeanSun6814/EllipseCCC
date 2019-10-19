@@ -28,7 +28,7 @@ public class Robot extends TimedRobot {
   }
 
   public enum ArmState {
-    Stop, Manual, PID1, PID2, PID3, PID4, NotReset
+    Stop, Manual, PID1, PID2, PID3, PID4
   }
 
   public enum RollerState {
@@ -160,11 +160,14 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
+    try2ResetArmEncoder();
+  }
+
+  public void try2ResetArmEncoder() {
     if (!armLimitSwitch.get()) {
       armMotor.setSelectedSensorPosition(0);
       armIsReset = true;
     }
-
   }
 
   public void updateDrive() {
@@ -199,10 +202,9 @@ public class Robot extends TimedRobot {
     }
 
     if (!armIsReset) {
-      armState = ArmState.NotReset;
-    } else {
-      if (armState == ArmState.NotReset)
-        armState = ArmState.Stop;
+      if (armState != ArmState.Stop) {
+        armState = ArmState.Manual;
+      }
     }
 
     switch (armState) {
@@ -220,6 +222,7 @@ public class Robot extends TimedRobot {
       break;
     case Manual:
       armMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(1));
+      try2ResetArmEncoder();
       break;
     case Stop:
       armMotor.set(ControlMode.PercentOutput, 0);
