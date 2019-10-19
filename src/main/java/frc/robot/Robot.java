@@ -84,6 +84,8 @@ public class Robot extends TimedRobot {
 
     leftMaster.setInverted(true);
     rightMaster.setInverted(false);
+    topRollerMotor.setInverted(true);
+
     leftSlave.follow(leftMaster);
     rightSlave.follow(rightMaster);
     leftSlave.setInverted(InvertType.FollowMaster);
@@ -106,6 +108,21 @@ public class Robot extends TimedRobot {
     armMotor.configForwardSoftLimitThreshold((int) (175 / kArmTick2Deg), 10);
     armMotor.configReverseSoftLimitEnable(true, 10);
     armMotor.configForwardSoftLimitEnable(true, 10);
+
+    rightRollerMotor.configReverseSoftLimitEnable(false, 10);
+    rightRollerMotor.configForwardSoftLimitEnable(false, 10);
+    leftRollerMotor.configReverseSoftLimitEnable(false, 10);
+    leftRollerMotor.configForwardSoftLimitEnable(false, 10);
+    topRollerMotor.configReverseSoftLimitEnable(false, 10);
+    topRollerMotor.configForwardSoftLimitEnable(false, 10);
+
+    rightRollerMotor.configContinuousCurrentLimit(40, 10);
+    leftRollerMotor.configContinuousCurrentLimit(40, 10);
+    topRollerMotor.configContinuousCurrentLimit(40, 10);
+
+    rightRollerMotor.configPeakCurrentLimit(0);
+    leftRollerMotor.configPeakCurrentLimit(0);
+    topRollerMotor.configPeakCurrentLimit(0);
 
     armMotor.config_kP(0, 0.6, 10);
     armMotor.config_kI(0, 0.002, 10);
@@ -282,9 +299,15 @@ public class Robot extends TimedRobot {
     double power = 0.5;
     switch (rollerState) {
     case Stop:
-      leftRollerMotor.set(ControlMode.PercentOutput, 0);
-      rightRollerMotor.set(ControlMode.PercentOutput, 0);
-      topRollerMotor.set(ControlMode.PercentOutput, 0);
+      if (pistonState == PistonState.Ball) {
+        leftRollerMotor.set(ControlMode.PercentOutput, -0.2);
+        rightRollerMotor.set(ControlMode.PercentOutput, -0.2);
+        topRollerMotor.set(ControlMode.PercentOutput, -0.2);
+      } else {
+        leftRollerMotor.set(ControlMode.PercentOutput, 0.2);
+        rightRollerMotor.set(ControlMode.PercentOutput, 0.2);
+        topRollerMotor.set(ControlMode.PercentOutput, 0.2);
+      }
       break;
     case Manual:
       leftRollerMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(4));
@@ -296,7 +319,7 @@ public class Robot extends TimedRobot {
         power = -0.5;
         leftRollerMotor.set(ControlMode.PercentOutput, power);
         rightRollerMotor.set(ControlMode.PercentOutput, power);
-        topRollerMotor.set(ControlMode.PercentOutput, -power);
+        topRollerMotor.set(ControlMode.PercentOutput, power);
       } else {
         power = 0.5;
         leftRollerMotor.set(ControlMode.PercentOutput, power);
@@ -308,7 +331,7 @@ public class Robot extends TimedRobot {
         power = 0.5;
         leftRollerMotor.set(ControlMode.PercentOutput, power);
         rightRollerMotor.set(ControlMode.PercentOutput, power);
-        topRollerMotor.set(ControlMode.PercentOutput, -power);
+        topRollerMotor.set(ControlMode.PercentOutput, power);
       } else {
         power = -0.5;
         leftRollerMotor.set(ControlMode.PercentOutput, power);
