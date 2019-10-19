@@ -7,6 +7,10 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
+import edu.wpi.cscore.MjpegServer;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.cscore.VideoMode;
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -47,6 +51,7 @@ public class Robot extends TimedRobot {
   private AutoMode autoMode = AutoMode.None;
   SendableChooser<AutoMode> autoChooser = new SendableChooser<>();
 
+  private UsbCamera camera;
   private TalonSRX leftMaster = new TalonSRX(3);
   private TalonSRX rightMaster = new TalonSRX(1);
   private VictorSPX leftSlave = new VictorSPX(1);
@@ -56,8 +61,8 @@ public class Robot extends TimedRobot {
   private VictorSPX armSlave = new VictorSPX(3);
 
   private TalonSRX leftRollerMotor = new TalonSRX(4);
-  private TalonSRX rightRollerMotor = new TalonSRX(5);
-  private TalonSRX topRollerMotor = new TalonSRX(7);
+  private TalonSRX rightRollerMotor = new TalonSRX(2);
+  private TalonSRX topRollerMotor = new TalonSRX(6);
 
   private Compressor compressor = new Compressor();
   private DoubleSolenoid piston = new DoubleSolenoid(0, 1);
@@ -168,6 +173,13 @@ public class Robot extends TimedRobot {
     try2ResetArmEncoder();
   }
 
+  public void startCamera() {
+    camera = CameraServer.getInstance().startAutomaticCapture();
+    camera.setVideoMode(VideoMode.PixelFormat.kMJPEG, 160, 120, 15);
+    MjpegServer cameraServer = new MjpegServer("Camera 0", 5810);
+    cameraServer.setSource(camera);
+  }
+
   public void try2ResetArmEncoder() {
     if (!armLimitSwitch.get()) {
       armMotor.setSelectedSensorPosition(0);
@@ -193,15 +205,15 @@ public class Robot extends TimedRobot {
   }
 
   public void updateArm() {
-    if (Math.abs(operatorJoystick.getRawAxis(1)) > 0.1) {
+    if (Math.abs(operatorJoystick.getRawAxis(3)) > 0.1) {
       armState = ArmState.Manual;
-    } else if (operatorJoystick.getRawButton(5)) {
+    } else if (operatorJoystick.getRawButton(1)) {
       armState = ArmState.PID1;
-    } else if (operatorJoystick.getRawButton(6)) {
+    } else if (operatorJoystick.getRawButton(4)) {
       armState = ArmState.PID2;
-    } else if (operatorJoystick.getRawButton(7)) {
+    } else if (operatorJoystick.getRawButton(3)) {
       armState = ArmState.PID3;
-    } else if (operatorJoystick.getRawButton(8)) {
+    } else if (operatorJoystick.getRawButton(2)) {
       armState = ArmState.PID4;
     } else {
     }
@@ -214,19 +226,19 @@ public class Robot extends TimedRobot {
 
     switch (armState) {
     case PID1:
-      armMotor.set(ControlMode.Position, 0);
+      armMotor.set(ControlMode.Position, 0 / kArmTick2Deg);
       break;
     case PID2:
-      armMotor.set(ControlMode.Position, 30);
+      armMotor.set(ControlMode.Position, 10 / kArmTick2Deg);
       break;
     case PID3:
-      armMotor.set(ControlMode.Position, 100);
+      armMotor.set(ControlMode.Position, 100 / kArmTick2Deg);
       break;
     case PID4:
-      armMotor.set(ControlMode.Position, 140);
+      armMotor.set(ControlMode.Position, 140 / kArmTick2Deg);
       break;
     case Manual:
-      armMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(1));
+      armMotor.set(ControlMode.PercentOutput, operatorJoystick.getRawAxis(3) * 0.3);
       try2ResetArmEncoder();
       break;
     case Stop:
@@ -238,9 +250,9 @@ public class Robot extends TimedRobot {
   }
 
   public void updatePistons() {
-    if (operatorJoystick.getRawButton(1)) {
+    if (operatorJoystick.getRawButton(10)) {
       pistonState = PistonState.Ball;
-    } else if (operatorJoystick.getRawButton(2)) {
+    } else if (operatorJoystick.getRawButton(9)) {
       pistonState = PistonState.Hatch;
     } else {
     }
@@ -257,16 +269,17 @@ public class Robot extends TimedRobot {
   }
 
   public void updateRollers() {
-    if (Math.abs(operatorJoystick.getRawAxis(4)) > 0.1) {
+    if (Math.abs(operatorJoystick.getRawAxis(1)) > 0.1) {
       rollerState = RollerState.Manual;
-    } else if (operatorJoystick.getRawButton(3)) {
+    } else if (operatorJoystick.getRawButton(7)) {
       rollerState = RollerState.In;
-    } else if (operatorJoystick.getRawButton(4)) {
+    } else if (operatorJoystick.getRawButton(8)) {
       rollerState = RollerState.Out;
     } else {
+      rollerState = RollerState.Stop;
     }
 
-    double power = 1;
+    double power = 0.5;
     switch (rollerState) {
     case Stop:
       leftRollerMotor.set(ControlMode.PercentOutput, 0);
@@ -280,23 +293,24 @@ public class Robot extends TimedRobot {
       break;
     case In:
       if (pistonState == PistonState.Ball) {
-        power = -1;
+        power = -0.5;
         leftRollerMotor.set(ControlMode.PercentOutput, power);
         rightRollerMotor.set(ControlMode.PercentOutput, power);
-        topRollerMotor.set(ControlMode.PercentOutput, power);
+        topRollerMotor.set(ControlMode.PercentOutput, -power);
       } else {
-        power = 1;
+        power = 0.5;
         leftRollerMotor.set(ControlMode.PercentOutput, power);
         rightRollerMotor.set(ControlMode.PercentOutput, power);
       }
+      break;
     case Out:
       if (pistonState == PistonState.Ball) {
-        power = -1;
+        power = 0.5;
         leftRollerMotor.set(ControlMode.PercentOutput, power);
         rightRollerMotor.set(ControlMode.PercentOutput, power);
-        topRollerMotor.set(ControlMode.PercentOutput, power);
+        topRollerMotor.set(ControlMode.PercentOutput, -power);
       } else {
-        power = 1;
+        power = -0.5;
         leftRollerMotor.set(ControlMode.PercentOutput, power);
         rightRollerMotor.set(ControlMode.PercentOutput, power);
       }
@@ -374,11 +388,13 @@ public class Robot extends TimedRobot {
     rightMaster.setNeutralMode(mode);
     armMotor.setNeutralMode(mode);
     armSlave.setNeutralMode(mode);
-    rollerMotor.setNeutralMode(mode);
+    rightRollerMotor.setNeutralMode(mode);
+    leftRollerMotor.setNeutralMode(mode);
+    topRollerMotor.setNeutralMode(mode);
   }
 
   @Override
   public void testPeriodic() {
-
+    rightRollerMotor.set(ControlMode.PercentOutput, 0.3);
   }
 }
