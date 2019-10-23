@@ -130,7 +130,8 @@ public class Robot extends TimedRobot {
     armMotor.config_kF(0, 0, 10);
     armMotor.config_IntegralZone(0, (int) (10 / kArmTick2Deg), 10);
 
-    compressor.start();
+    // compressor.start();
+    compressor.stop();
 
     autoChooser.setDefaultOption("None", AutoMode.None);
     autoChooser.addOption("Tele-op Drive", AutoMode.TeleDrive);
@@ -246,7 +247,7 @@ public class Robot extends TimedRobot {
       armMotor.set(ControlMode.Position, 0 / kArmTick2Deg);
       break;
     case PID2:
-      armMotor.set(ControlMode.Position, 35 / kArmTick2Deg);
+      armMotor.set(ControlMode.Position, 40 / kArmTick2Deg);
       break;
     case PID3:
       armMotor.set(ControlMode.Position, 70 / kArmTick2Deg);
@@ -355,8 +356,10 @@ public class Robot extends TimedRobot {
   }
 
   public void arcadeDrive() {
-    double speed = -driverJoystick.getRawAxis(1) * 0.6;
-    double turn = driverJoystick.getRawAxis(4) * 0.3;
+    double speed = -driverJoystick.getRawAxis(1) * 0.7;
+    double turn = driverJoystick.getRawAxis(4) * 0.4;
+
+    // turn += (speed > 0) ? -0.07 : 0.07;
 
     speed = applyDeadband(speed);
     turn = applyDeadband(turn);
